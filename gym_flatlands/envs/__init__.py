@@ -1,1 +1,1 @@
-from gym_flatlands.envs.flatlands_env import FlatlandsEnv
+from envs.flatlands_env import FlatlandsEnv
