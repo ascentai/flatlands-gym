@@ -29,6 +29,7 @@ class FlatlandsEnv(gym.Env):
         self.vehicle_model = BicycleModel(*self.world.path[0], self.world.direction[0], max_velocity=1)
 
         self.car_info = None
+        self.distance_traveled = None
 
     def _step(self, action):
         """
@@ -48,6 +49,10 @@ class FlatlandsEnv(gym.Env):
             0,
             "dist_upcoming_points":
             self.world.get_dist_upcoming_points(self.vehicle_model.position, self.vehicle_model.orientation),
+            "distance_from_track":
+            self.world.distance_from_track(self.vehicle_model.position),
+            "distance_to_goal":
+            self.world.distance_to_goal(self.vehicle_model.position),
         }
 
         return obs
@@ -57,7 +62,7 @@ class FlatlandsEnv(gym.Env):
         Reset the car to a static place somewhere on the track.
         """
 
-        LOGGER.debug("system resetting")
+        LOGGER.debug("environment resetting")
 
         idx = random.randint(0, len(self.world.path) - 1)
         LOGGER.debug("Randomly placing the vehicle near map point #{}".format(idx))
