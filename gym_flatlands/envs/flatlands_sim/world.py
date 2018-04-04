@@ -9,18 +9,9 @@ from collections import namedtuple
 import math
 import logging
 
-import shapely.geometry as geom
 from scipy.spatial import cKDTree as KDTree
 
 from envs.flatlands_sim import geoutils
-
-MAP_POINT = namedtuple('map_point', [
-    'lat',
-    'lon',
-    'width',
-    'direction',
-    'segment_length',
-])
 
 LOGGER = logging.getLogger("world")
 
@@ -62,6 +53,13 @@ class WorldMap(object):
         # Holds the scipy kd-tree created from all map-points in a x-y projection
         self.kd_tree = None
 
+        self.map_point = namedtuple('map_point', [
+            'lat',
+            'lon',
+            'width',
+            'direction',
+            'segment_length',
+        ])
         # Draw class (can't initialize until we have loaded our data)
         self.zoomed_percentage_of_window = zoomed_percentage_of_window
 
@@ -189,7 +187,7 @@ class WorldMap(object):
                     row_float = [float(i) for i in row]
 
                     map_data.append(
-                        MAP_POINT(
+                        self.map_point(
                             lon=row_float[0] / scale,
                             # flip the y-coordinate in preparation for the rotation in draw.py
                             lat=(height - row_float[1]) / scale,
@@ -202,7 +200,7 @@ class WorldMap(object):
 
                 theta = geoutils.bearing((end.lon, end.lat), (start.lon, start.lat))
                 dist = math.sqrt(abs(end.lon - start.lon)**2 + abs(end.lat - start.lat)**2)
-                map_data[-1] = MAP_POINT(
+                map_data[-1] = self.map_point(
                     lon=end.lon, lat=end.lat, width=end.width, direction=theta, segment_length=dist)
                 map_data.append(start)
                 LOGGER.debug("Found %d points of track data", len(map_data))
@@ -259,25 +257,10 @@ class WorldMap(object):
             point2 = self.kd_tree.data[0]
             point3 = self.kd_tree.data[1]
 
-        # Draw lines between them, and find the closest point on the lines to the input
-        line1 = geom.LineString([point1, point2])
-        line2 = geom.LineString([point2, point3])
+        closest_pt = geoutils.get_distance_to_lines(input_location, point1, point2, point3)
 
-        # Convert the input point to our local projection system
-        point = geom.Point(input_location)
-
-        # Now find the closest point on each line to our input
-        point_on_line1 = line1.interpolate(line1.project(point))
-        point_on_line2 = line2.interpolate(line2.project(point))
-
-        # Now get the distances between those points and the input point
-        dist1 = point.distance(point_on_line1)
-        dist2 = point.distance(point_on_line2)
-
-        LOGGER.debug("The distance to the nearest two line segments on the track is %s, %s", dist1, dist2)
-
-        # We're only concerned about the smaller one, so we'll return it
-        return min(dist1, dist2)
+        LOGGER.debug("The distance to the track is %s", closest_pt)
+        return closest_pt
 
     def distance_to_goal(self, input_location):
         """

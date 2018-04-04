@@ -2,10 +2,11 @@
 Geometric calculation utility functions
 """
 
-from math import sin, cos, atan2, pi
+from math import sin, cos, atan2, pi, hypot
 from collections import namedtuple
 
-from shapely import geometry as geom
+from numpy import cross
+from numpy.linalg import norm
 from pyproj import Proj, transform
 
 
@@ -19,10 +20,9 @@ def distance(prev, curr):
     :return: the distance in meters (or whatever the input units were)
     """
 
-    point1 = geom.Point(prev)
-    point2 = geom.Point(curr)
+    dist = hypot(curr[0] - prev[0], curr[1] - prev[1])
 
-    return point1.distance(point2)
+    return dist
 
 
 def bearing(prev, curr):
@@ -84,9 +84,7 @@ def relative_distance(point1, point2, angle):
     heading_angle = min(direct_angle, 2 * pi - direct_angle)
 
     # Get information between our points
-    point1 = geom.Point(point1)
-    point2 = geom.Point(point2)
-    absolute_dist = point1.distance(point2)
+    absolute_dist = distance(point1, point2)
 
     # Then use trig to find the relative x and y distances between the points
     x_dist = absolute_dist * sin(heading_angle)
@@ -124,3 +122,16 @@ def proj_to_local(points, new_proj="epsg:30176"):
         local_paths.append(local_coord(projection_x, projection_y))
 
     return local_paths
+
+
+def get_distance_to_lines(input_location, line_pt_1, line_pt_2, line_pt_3):
+    """
+    Given three points, draw lines between them
+
+    """
+
+    dist1 = norm(cross(line_pt_2 - line_pt_1, line_pt_1 - input_location)) / norm(line_pt_2 - line_pt_1)
+    dist2 = norm(cross(line_pt_3 - line_pt_2, line_pt_2 - input_location)) / norm(line_pt_3 - line_pt_2)
+
+    # We're only concerned about the smaller one, so we'll return it
+    return min(dist1, dist2)
