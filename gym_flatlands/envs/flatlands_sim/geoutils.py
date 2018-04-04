@@ -124,3 +124,26 @@ def proj_to_local(points, new_proj="epsg:30176"):
         local_paths.append(local_coord(projection_x, projection_y))
 
     return local_paths
+
+def get_distance_to_lines(input_location, line_pt_1, line_pt_2, line_pt_3):
+    """
+    Given three points, draw lines between them
+
+    """
+    # Draw lines between them, and find the closest point on the lines to the input
+    line1 = geom.LineString([line_pt_1, line_pt_2])
+    line2 = geom.LineString([line_pt_2, line_pt_3])
+
+    # Convert the input point to our local projection system
+    point = geom.Point(input_location)
+
+    # Now find the closest point on each line to our input
+    point_on_line1 = line1.interpolate(line1.project(point))
+    point_on_line2 = line2.interpolate(line2.project(point))
+
+    # Now get the distances between those points and the input point
+    dist1 = point.distance(point_on_line1)
+    dist2 = point.distance(point_on_line2)
+
+    # We're only concerned about the smaller one, so we'll return it
+    return min(dist1, dist2)
