@@ -63,7 +63,6 @@ class DrawMap():
             'segment_length',
         ])
 
-
         # Define our (soft) border we have inside the window
         self.border_width = 0.05
         self.border_size = self.window_y * self.border_width

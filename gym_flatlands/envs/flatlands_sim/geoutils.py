@@ -123,14 +123,15 @@ def proj_to_local(points, new_proj="epsg:30176"):
 
     return local_paths
 
+
 def get_distance_to_lines(input_location, line_pt_1, line_pt_2, line_pt_3):
     """
     Given three points, draw lines between them
 
     """
 
-    dist1 = norm(cross(line_pt_2-line_pt_1, line_pt_1-input_location))/norm(line_pt_2-line_pt_1)
-    dist2 = norm(cross(line_pt_3-line_pt_2, line_pt_2-input_location))/norm(line_pt_3-line_pt_2)
+    dist1 = norm(cross(line_pt_2 - line_pt_1, line_pt_1 - input_location)) / norm(line_pt_2 - line_pt_1)
+    dist2 = norm(cross(line_pt_3 - line_pt_2, line_pt_2 - input_location)) / norm(line_pt_3 - line_pt_2)
 
     # We're only concerned about the smaller one, so we'll return it
     return min(dist1, dist2)
