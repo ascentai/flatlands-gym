@@ -28,9 +28,9 @@ def sim_demo():
                 "wheel_angle": theta,
             }
 
-            obs = flatlands._step(action)
+            obs = flatlands.step(action)
 
-            flatlands._render()
+            flatlands.render()
 
             # x and y distance to the 3rd point ahead (in meters)
             point = obs["dist_upcoming_points"][3]
@@ -38,7 +38,7 @@ def sim_demo():
             # x and y form a right triangle, the angle towards which we want to go is their atan
             theta = math.atan(point[0] / point[1])
 
-        flatlands._reset()
+        flatlands.reset()
 
 
 if __name__ == "__main__":

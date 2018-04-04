@@ -30,7 +30,7 @@ class FlatlandsEnv(gym.Env):
 
         self.car_info = None
 
-    def _step(self, action):
+    def step(self, action):
         """
         Accepts an `action` object, consisting of desired accelleration (accel)
         and the steering angle
@@ -52,7 +52,7 @@ class FlatlandsEnv(gym.Env):
 
         return obs
 
-    def _reset(self):
+    def reset(self):
         """
         Reset the car to a static place somewhere on the track.
         """
@@ -67,7 +67,7 @@ class FlatlandsEnv(gym.Env):
 
         self.distance_traveled = 0
 
-    def _render(self, mode='human', close=False):
+    def render(self, mode='human', close=False):
         """
         Use pygame to draw the map
         """
