@@ -32,10 +32,10 @@ class DrawMap():
         self.path = [(x[0], x[1]) for x in self.projected_path]
         self.segment_length = [(x.segment_length) for x in self.map_data]
 
-        self.lat_min = custom_map.lat_min
-        self.lat_max = custom_map.lat_max
-        self.long_min = custom_map.long_min
-        self.long_max = custom_map.long_max
+        self.y_min = custom_map.y_min
+        self.y_max = custom_map.y_max
+        self.x_min = custom_map.x_min
+        self.x_max = custom_map.x_max
 
         # The width isn't set, it's generated based on the aspect ratio of the map data
         pygame.init()
@@ -63,7 +63,6 @@ class DrawMap():
             'segment_length',
         ])
 
-        self.lat_long = namedtuple('lat_long', 'lat, long')
 
         # Define our (soft) border we have inside the window
         self.border_width = 0.05
@@ -91,14 +90,14 @@ class DrawMap():
         """
 
         self.track_draw_info = {}
-        LOGGER.debug("track bounding box: (%s, %s) (%s, %s)", self.long_min, self.lat_min, self.long_max, self.lat_max)
+        LOGGER.debug("track bounding box: (%s, %s) (%s, %s)", self.x_min, self.y_min, self.x_max, self.y_max)
 
-        # top_left = geom.Point(self.long_min, self.lat_max)
-        # top_right = geom.Point(self.long_max, self.lat_max)
-        # bottom_left = geom.Point(self.long_min, self.lat_min)
+        # top_left = geom.Point(self.x_min, self.y_max)
+        # top_right = geom.Point(self.x_max, self.y_max)
+        # bottom_left = geom.Point(self.x_min, self.y_min)
 
-        screen_height_in_m = geoutils.distance((self.long_min, self.lat_max), (self.long_min, self.lat_min))
-        screen_width_in_m = geoutils.distance((self.long_min, self.lat_max), (self.long_max, self.lat_max))
+        screen_height_in_m = geoutils.distance((self.x_min, self.y_max), (self.x_min, self.y_min))
+        screen_width_in_m = geoutils.distance((self.x_min, self.y_max), (self.x_max, self.y_max))
 
         LOGGER.debug("screen height: %sm, width %sm", screen_height_in_m, screen_width_in_m)
 
@@ -350,8 +349,8 @@ class DrawMap():
         """
         Draws the car at a set (new) position on the map
 
-        Accepts:    car_position: The GPS location of the car (self.lat_long namedtuple)
-                    car_direction: radians from north which it's pointing
+        Accepts:    kwargs: A dict containing values needed for drawing the car
+                        ex. car_position_x, car_directions, etc.
 
         Return: Nothing
         """
@@ -385,7 +384,7 @@ class DrawMap():
         self.draw(update_screen=False)
 
         # requisite proportions for proper scaling of the sprite
-        mPerPx = (self.lat_max - self.lat_min) / (self.window_y - self.border_size * 2)
+        mPerPx = (self.y_max - self.y_min) / (self.window_y - self.border_size * 2)
 
         pxPerM, car_sprite = self._car_sprite
 
@@ -493,10 +492,10 @@ class DrawMap():
 
     def _scale_for_display(self, input_coordinates):
         """
-        Scales a set of lat-long coordinates to integer values (for location on the display)
+        Scales a set of x-y coordinates to integer values (for location on the display)
 
-        Accepts:
-            input_coordinates: a list of tuples, containing the lat-long values
+            input_coordinates:
+        Accepts: input_coordinates, a list of 2-tuples each containing x-y values
 
         Returns: a new list of the same size as the input list containing integer values for display
         """
@@ -504,15 +503,15 @@ class DrawMap():
         # seperate x and y
         x_points_scaled = scale_list(
             input_list=[x[0] for x in input_coordinates],
-            min_val=self.long_min,
-            max_val=self.long_max,
+            min_val=self.x_min,
+            max_val=self.x_max,
             new_range=(self.window_x - self.border_size * 2),
             offset=self.border_size)
 
         y_points_scaled = scale_list(
             input_list=[x[1] for x in input_coordinates],
-            min_val=self.lat_min,
-            max_val=self.lat_max,
+            min_val=self.y_min,
+            max_val=self.y_max,
             new_range=(self.window_y - self.border_size * 2),
             offset=self.border_size,
             adjust_amount=self.window_y)
@@ -579,7 +578,7 @@ class DrawMap():
             A pygame `screen` Object that can be drawn at any point on the screen
                 OR
             a None object, if the coordinates given are impossible to visualize
-                (lat-long OOB)
+                (x-y OOB)
         """
 
         # Get outerbounds of the zoomed view

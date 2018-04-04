@@ -22,10 +22,6 @@ MAP_POINT = namedtuple('map_point', [
     'segment_length',
 ])
 
-LAT_LONG = namedtuple('lat_long', 'lat, long')
-CAR_POSITION_POINT = namedtuple("car_position_ref", ["lat_long", "direction"])
-LOCAL_COORD = namedtuple("local_coord", "x_local, y_local")
-
 LOGGER = logging.getLogger("world")
 
 
@@ -58,10 +54,7 @@ class WorldMap(object):
         # Location of the input file used by load function
         self.map_file = track_file
 
-        self.lat_long = LAT_LONG
-
         # Store the current position of the car
-        self.car_position_ref = CAR_POSITION_POINT
         self.car_position = None
 
         self._model = None
@@ -91,7 +84,7 @@ class WorldMap(object):
     @property
     def path_global(self):
         """
-        Returns all of the lat-long coords in the map file
+        Returns all of the x-y coords in the map file
         """
         return [(x.lat, x.lon) for x in self.map_data]
 
@@ -120,14 +113,14 @@ class WorldMap(object):
     @property
     def start(self):
         """
-        Returns only the first set of lat-long coords in the map file
+        Returns only the first set of x-y coords in the map file
         """
         return (self.projected_path[0].x_local, self.projected_path[0].y_local)
 
     @property
     def goal(self):
         """
-        Returns only the last set of lat-long coords for the map file
+        Returns only the last set of x-y coords for the map file
         """
         return (self.projected_path[-1].x_local, self.projected_path[-1].y_local)
 
@@ -146,30 +139,30 @@ class WorldMap(object):
         return [(x.direction) for x in self.map_data]
 
     @property
-    def lat_min(self):
+    def y_min(self):
         """
-        Find the minimum latitude of the track
+        Find the minimum y of the track
         """
         return min([x.y_local for x in self.projected_path])
 
     @property
-    def lat_max(self):
+    def y_max(self):
         """
-        Find the maximum latitude of the track
+        Find the maximum y of the track
         """
         return max([x.y_local for x in self.projected_path])
 
     @property
-    def long_min(self):
+    def x_min(self):
         """
-        Find the minimum longitude of the track
+        Find the minimum x of the track
         """
         return min([x.x_local for x in self.projected_path])
 
     @property
-    def long_max(self):
+    def x_max(self):
         """
-        Find the maximum longitude of the track
+        Find the maximum x of the track
         """
         return max([x.x_local for x in self.projected_path])
 
@@ -246,7 +239,7 @@ class WorldMap(object):
         """
         Returns the distance from the track for a set of geographic coordinates
 
-        Accepts: input_location: 2-tuple containing latitute and longitude
+        Accepts: input_location: 2-tuple containing x and y
 
         Returns: the distance in meters from the track
         """
@@ -291,7 +284,7 @@ class WorldMap(object):
         Computes the distance around the track to the goal point
 
         Accepts:
-            input_location: a tuple containing lat-long coordinates formatted to epsg:30176
+            input_location: a tuple containing x-y coordinates formatted to epsg:30176
         Returns:
             A float containing the distance in meters to the goal point
         """
@@ -309,7 +302,7 @@ class WorldMap(object):
         the track nearest to the target.
 
         Accepts:
-            position: lat-long tuple containing the search point
+            position: x-y tuple containing the search point
             n: the number of points to return distance info for
         Returns:
             A list of (n) tuples containing the distance in meters (x and y)
@@ -345,16 +338,16 @@ class WorldMap(object):
 
     def get_nearest_points(self, origin, one_point_only=False, return_index=False):
         """
-        Find the nearest two points on the track to an arbitrary lat-long pair,
+        Find the nearest two points on the track to an arbitrary x-y pair,
 
         Accepts:
-            origin: a lat-long tuple containing coordinates formatted to epsg:30176
+            origin: a x-y tuple containing coordinates formatted to epsg:30176
             one_point_only: A boolean to ask for only a single value instead of two
             return_index: A boolean for getting the nearest point in Map.map_data
             instead of its coords
 
         Returns:
-            Two 2-tuples (or 1 with one_point_only), containing the lat-long for the
+            Two 2-tuples (or 1 with one_point_only), containing the x-y for the
             nearest point(s) on the track
         """
 

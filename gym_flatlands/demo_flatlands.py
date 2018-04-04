@@ -4,7 +4,6 @@ Run a car directly along the track using proportional control
 
 import sys
 import math
-import time
 import logging
 
 from envs import FlatlandsEnv
