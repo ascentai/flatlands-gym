@@ -111,7 +111,7 @@ def proj_to_local(points, new_proj="epsg:30176"):
             formatted like `epsg:{proj_number}`
     Returns:
         A numpy array of the same size as the input list with 2-tuples containing
-            relative (x,y) projcetion coordinates
+            relative (x,y) projection coordinates
     """
 
     global_projection = Proj(init="epsg:4326")
