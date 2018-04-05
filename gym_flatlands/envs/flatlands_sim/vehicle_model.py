@@ -327,8 +327,8 @@ class PointModel(IVehicleModel):
         """
         Sets (saves) a new pose.
 
-        :param  x:      new latitude (in meters, projected)
-        :param  y:      new longitude (in meters, projected)
+        :param  x:      new x position (in meters, projected)
+        :param  y:      new y position (in meters, projected)
         :param  theta:  new heading (angle)
 
         :return: None
