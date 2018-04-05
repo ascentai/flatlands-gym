@@ -22,9 +22,9 @@ class DrawMap():
     A class for visualizing system state with pygame.
     """
 
-    def __init__(self, map_data):
+    def __init__(self, map_data, map_path):
 
-        custom_map = WorldMap("gym_flatlands/envs/flatlands_sim/original_circuit_green.csv")
+        custom_map = WorldMap(map_path)
 
         self.map_data = map_data
         self.projected_path = custom_map.projected_path
