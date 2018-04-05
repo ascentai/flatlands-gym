@@ -34,6 +34,7 @@ class FlatlandsEnv(gym.Env):
                 self.world.direction[0], max_velocity=1)
 
         self.car_info = None
+        self.seed = None
 
         if (not hasattr(self.vehicle_model, "max_wheel_angle") or not
                 hasattr(self.vehicle_model, "wheel_turn_angle")):
@@ -42,14 +43,14 @@ class FlatlandsEnv(gym.Env):
 
         self.observation_space = spaces.Box(
             np.array([
-                *([-100] * 10),                         # distances
+                *([-100] * 10),                         # next closest points
                 0,                                      # velocity
                 -self.vehicle_model.max_accel,          # acceleration
                 -self.vehicle_model.max_wheel_angle,    # wheel angle
                 0                                       # distance to path
             ]),
             np.array([
-                *([100] * 10),                      # distances
+                *([100] * 10),                      # next closest points
                 self.vehicle_model.max_velocity,    # velocity
                 self.vehicle_model.max_accel,       # acceleration
                 self.vehicle_model.max_wheel_angle, # wheel angle
@@ -67,6 +68,11 @@ class FlatlandsEnv(gym.Env):
                 self.vehicle_model.max_wheel_angle  # wheel angle
             ])
         )
+
+    #def seed(self, seed=None):
+    #    #random.seed(seed)
+    #    print("*********************called")
+    #    return [seed]
 
     def step(self, action):
         """
@@ -93,18 +99,28 @@ class FlatlandsEnv(gym.Env):
                 self.vehicle_model.position)
 
         goal_dist = self.world.distance_to_goal(self.vehicle_model.position)
+        goal_dist = goal_dist if goal_dist > 0 else 1
         total_dist = self.world.path_length
 
         reward = d_path * -10 + total_dist / goal_dist
+        done = (d_path > 19) or (goal_dist < 2)
         obs = [
-            *accumulator,                           # distances
+            *accumulator,                           # next closest points
             self.vehicle_model.velocity,            # velocity
             self.vehicle_model.acceleration,        # acceleration
             self.vehicle_model.wheel_turn_angle,    # wheel angle
             d_path                                  # distance to path
         ]
+        if reward == float("-inf"):
+            print("goal_dist:",goal_dist)
+            print("done:",done)
+            print("reward:",reward)
+            print("pos:",self.vehicle_model.position)
+            #print("action:",action)
+            sys.exit()
 
-        return obs, reward, 0, 0
+        # observation, reward, end condition, info
+        return obs, reward, done, {}
 
     def reset(self):
         """

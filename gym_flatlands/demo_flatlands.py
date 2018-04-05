@@ -24,22 +24,22 @@ def sim_demo():
     while True:
         for _ in flatlands.world.map_data:
 
-            action = {
-                "accel": 0.5,
-                "wheel_angle": theta,
-            }
+            action = [
+                0.5,    # acceleration
+                theta,  # wheel angle
+            ]
 
-            obs = flatlands._step(action)
+            obs, reward, done, we = flatlands.step(action)
 
-            flatlands._render()
+            flatlands.render()
 
             # x and y distance to the 3rd point ahead (in meters)
-            point = obs["dist_upcoming_points"][3]
+            point = (obs[4], obs[5])
 
             # x and y form a right triangle, the angle towards which we want to go is their atan
             theta = math.atan(point[0] / point[1])
 
-        flatlands._reset()
+        flatlands.reset()
 
 
 if __name__ == "__main__":

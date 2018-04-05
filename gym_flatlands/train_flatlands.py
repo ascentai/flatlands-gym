@@ -42,10 +42,9 @@ def train(timesteps, seed):
     set_global_seeds(workerseed)
 
     env = gym.make("flatlands-v0")
-    env.reset()
     env = bench.Monitor(env, logger.get_dir() and
             os.path.join(logger.get_dir(), str(rank)))
-    env.seed(workerseed)
+    #env.seed(workerseed)
 
     #env = wrap_deepmind(env)
     #env.seed(workerseed)
