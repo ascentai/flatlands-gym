@@ -177,11 +177,10 @@ class WorldMap(object):
         """
         Loads a given custom track
         """
-        self.map_file_path = track_file
 
         try:
-            LOGGER.debug("Attempting to open %s", self.map_file_path)
-            with open(self.map_file_path, newline="") as csvfile:
+            LOGGER.debug("Attempting to open %s", track_file)
+            with open(track_file, newline="") as csvfile:
                 spamreader = csv.reader(csvfile, delimiter=",", quotechar='"')
                 map_data = []
                 line = csvfile.readline()
@@ -215,7 +214,7 @@ class WorldMap(object):
                 LOGGER.debug("Found %d points of track data", len(map_data))
                 self.map_data = map_data
         except EnvironmentError:
-            LOGGER.error("Failed to import file %s", self.map_file_path)
+            LOGGER.error("Failed to import file %s", track_file)
             LOGGER.error(EnvironmentError)
             raise
 
@@ -382,3 +381,17 @@ class WorldMap(object):
         if return_index:
             return idx
         return self.path[idx]
+    
+    def is_close_to_goal(self, position, epsilon=5):
+        """
+        Checks if the input is within a certain distance to the end of the track
+
+        Accepts:
+            position: a 2tuple with x-y values
+            epsilon (optional): the length to check in
+        
+        Returns:
+            A boolean (true/false)
+        """
+
+        return geoutils.distance(position, self.goal) < epsilon

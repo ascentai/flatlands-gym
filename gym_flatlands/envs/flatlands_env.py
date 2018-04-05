@@ -4,10 +4,9 @@ Gym environment for a on-track driving simulator
 
 import logging
 import random
+import os
 
 import gym
-from gym import error, spaces, utils
-from gym.utils import seeding
 
 from envs.flatlands_sim import DrawMap, BicycleModel, WorldMap
 
@@ -24,12 +23,18 @@ class FlatlandsEnv(gym.Env):
         """
         Load the track, draw module, etc.
         """
-        self.world = WorldMap("gym_flatlands/envs/flatlands_sim/original_circuit_green.csv")
-        self.draw_class = DrawMap(map_data=self.world.map_data)
+
+        map_path = os.path.join(os.getcwd(), "envs/flatlands_sim/original_circuit_green.csv")
+        
+        self.world = WorldMap(map_path)
+        self.draw_class = DrawMap(map_data=self.world.map_data, map_path=map_path)
         self.vehicle_model = BicycleModel(*self.world.path[0], self.world.direction[0], max_velocity=1)
 
         self.car_info = None
         self.distance_traveled = None
+
+        self.observation_space = self.vehicle_model.observation_space_continuous()
+        self.action_space = self.vehicle_model.action_space()
 
     def _step(self, action):
         """
@@ -55,7 +60,13 @@ class FlatlandsEnv(gym.Env):
             self.world.distance_to_goal(self.vehicle_model.position),
         }
 
-        return obs
+        reward = 0
+
+        done = True if self.world.is_close_to_goal(self.vehicle_model.position) else False
+
+        info = None
+
+        return obs, reward, done, info
 
     def _reset(self):
         """
