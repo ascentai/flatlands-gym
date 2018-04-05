@@ -19,6 +19,7 @@ import logging
 import numpy as np
 from math import pi
 import pygame
+from gym.spaces import Box
 
 from envs.flatlands_sim import geoutils
 
@@ -384,6 +385,7 @@ class BicycleModel(PointModel):
         self._wheel_turn_angle = 0.0
         self._noise = noise
         self._previous_wheel_angle = 0.0
+        self._num_observed_poins = 5
 
         LOGGER.info("===== Bicycle vehicle model initialized with the following parameters ====")
         LOGGER.info(self)
@@ -580,4 +582,48 @@ class BicycleModel(PointModel):
 
         return car_info_object
 
+    def observation_space_continuous(self):
+        # get the model constraints
+        w = self.max_wheel_angle
+
+        v = self.max_velocity
+        a = self.max_accel
+
+        # min and max observation distances of coming up points from the "sensor"
+        # multiplied by 2 because x-y
+        # TODO create an actual sensor model and move the whole sensing logic there
+        min_dists = [-100] * (self._num_observed_poins * 2)
+        max_dists = [100] * (self._num_observed_poins * 2)
+
+        # populate pose boundaries based on settings in flatlands_params
+        pose_min = [0,0]
+        pose_max = [1,1]
+
+        # no need to map to [-1..1] interval
+        # first array in box are the min values, second array is the max values
+        box = Box(
+            np.array([
+                *min_dists,
+                0,  # velocity
+                -a,  # acceleration
+                -w,  # wheel angle
+                0  # distance from path
+            ]),
+            np.array([
+                *max_dists,
+                v,  # velocity
+                a,  # acceleration
+                w,  # wheel angle
+                2000  # distance from path
+            ]))
+
+        return Box(box.low, box.high)
+
+    def action_space (self):
+        # get the model contstraints
+        w = self.max_wheel_angle
+        w = 2 * math.pi
+        a = self.max_accel
+
+        return Box(np.array([-a, -w]), np.array([a, w]))
     #endregion
