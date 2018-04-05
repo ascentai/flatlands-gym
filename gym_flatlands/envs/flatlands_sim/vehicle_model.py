@@ -15,9 +15,9 @@ from abc import ABCMeta, abstractmethod
 import math
 import random
 import logging
+from math import pi
 
 import numpy as np
-from math import pi
 import pygame
 from gym.spaces import Box
 
@@ -596,8 +596,8 @@ class BicycleModel(PointModel):
         max_dists = [100] * (self._num_observed_poins * 2)
 
         # populate pose boundaries based on settings in flatlands_params
-        pose_min = [0,0]
-        pose_max = [1,1]
+        pose_min = [0, 0]
+        pose_max = [1, 1]
 
         # no need to map to [-1..1] interval
         # first array in box are the min values, second array is the max values
@@ -619,11 +619,12 @@ class BicycleModel(PointModel):
 
         return Box(box.low, box.high)
 
-    def action_space (self):
+    def action_space(self):
         # get the model contstraints
         w = self.max_wheel_angle
         w = 2 * math.pi
         a = self.max_accel
 
         return Box(np.array([-a, -w]), np.array([a, w]))
+
     #endregion
