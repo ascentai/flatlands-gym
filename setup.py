@@ -12,7 +12,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='gym_flatlands',
+    name='flatlands',
     install_requires=[
         'gym',
         'scipy',
@@ -28,7 +28,7 @@ setup(
     author='AscentAI',
     url='https://github.com/ascentai/flatlands-gym',
     author_email='dev@ascent.ai',
-    version='0.1.2',
+    version='0.1.3',
     classifiers=[
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
