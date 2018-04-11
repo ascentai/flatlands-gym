@@ -11,10 +11,9 @@ import gym
 from baselines.common import set_global_seeds
 from baselines import bench
 from baselines import logger
-from baselines.ppo1 import pposgd_simple, cnn_policy
+import pposgd_flatlands
 import baselines.common.tf_util as tfu
 
-from envs import FlatlandsEnv
 from flatlands_policy import flatPolicy
 
 
@@ -49,7 +48,7 @@ def train(timesteps, seed):
     #env = wrap_deepmind(env)
     #env.seed(workerseed)
 
-    pposgd_simple.learn(env, _policy_fn,
+    pposgd_flatlands.learn(env, _policy_fn,
             max_timesteps=int(timesteps * 1.1),
             timesteps_per_actorbatch=256,
             clip_param=0.2,
