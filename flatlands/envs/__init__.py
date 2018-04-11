@@ -1,1 +1,1 @@
-from flatlands.envs.flatlands_env import FlatlandsEnv
+from .flatlands_env import FlatlandsEnv

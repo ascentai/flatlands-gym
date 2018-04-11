@@ -2,7 +2,6 @@
 This module is used for visualizing the map and vehicle, using pygame
 """
 
-import sys
 from collections import namedtuple
 import math
 from math import pi
@@ -11,7 +10,6 @@ import logging
 import pygame
 from pygame import gfxdraw
 
-from.world import WorldMap
 from .geoutils import distance, offset
 
 LOGGER = logging.getLogger("draw")
