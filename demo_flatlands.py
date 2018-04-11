@@ -20,7 +20,6 @@ def sim_demo():
     """
 
     flatlands_env = gym.make('Flatlands-v0')
-    # flatlands = FlatlandsEnv()
 
     theta = 0
     while True:
