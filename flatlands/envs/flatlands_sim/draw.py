@@ -11,8 +11,8 @@ import logging
 import pygame
 from pygame import gfxdraw
 
-from envs.flatlands_sim.world import WorldMap
-from envs.flatlands_sim import geoutils
+from.world import WorldMap
+from .geoutils import distance, offset
 
 LOGGER = logging.getLogger("draw")
 
@@ -22,20 +22,20 @@ class DrawMap():
     A class for visualizing system state with pygame.
     """
 
-    def __init__(self, map_data):
+    def __init__(self, world):
 
-        custom_map = WorldMap("gym_flatlands/envs/flatlands_sim/original_circuit_green.csv")
+        # custom_map = WorldMap("gym_flatlands/envs/flatlands_sim/original_circuit_green.csv")
 
-        self.map_data = map_data
-        self.projected_path = custom_map.projected_path
+        self.map_data = world.map_data
+        self.projected_path = world.projected_path
 
         self.path = [(x[0], x[1]) for x in self.projected_path]
         self.segment_length = [(x.segment_length) for x in self.map_data]
 
-        self.y_min = custom_map.y_min
-        self.y_max = custom_map.y_max
-        self.x_min = custom_map.x_min
-        self.x_max = custom_map.x_max
+        self.y_min = world.y_min
+        self.y_max = world.y_max
+        self.x_min = world.x_min
+        self.x_max = world.x_max
 
         # The width isn't set, it's generated based on the aspect ratio of the map data
         pygame.init()
@@ -68,7 +68,7 @@ class DrawMap():
         self.border_size = self.window_y * self.border_width
 
         #For the zoomed view in the corner
-        self.zoomed_window_size = custom_map.zoomed_percentage_of_window * self.window_y
+        self.zoomed_window_size = world.zoomed_percentage_of_window * self.window_y
 
         # Hold the track information so we don't have to re-draw it every refresh
         self.track_draw_info = None
@@ -95,8 +95,8 @@ class DrawMap():
         # top_right = geom.Point(self.x_max, self.y_max)
         # bottom_left = geom.Point(self.x_min, self.y_min)
 
-        screen_height_in_m = geoutils.distance((self.x_min, self.y_max), (self.x_min, self.y_min))
-        screen_width_in_m = geoutils.distance((self.x_min, self.y_max), (self.x_max, self.y_max))
+        screen_height_in_m = distance((self.x_min, self.y_max), (self.x_min, self.y_min))
+        screen_width_in_m = distance((self.x_min, self.y_max), (self.x_max, self.y_max))
 
         LOGGER.debug("screen height: %sm, width %sm", screen_height_in_m, screen_width_in_m)
 
@@ -460,9 +460,9 @@ class DrawMap():
         direction = self.map_data[point_index].direction
         width = self.map_data[point_index].width
 
-        corner_1 = geoutils.offset(start_point, width / 2, direction - pi / 2)
+        corner_1 = offset(start_point, width / 2, direction - pi / 2)
 
-        corner_2 = geoutils.offset(start_point, width / 2, direction + pi / 2)
+        corner_2 = offset(start_point, width / 2, direction + pi / 2)
 
         if only_start_corners:
             return [corner_1, corner_2]
@@ -479,11 +479,11 @@ class DrawMap():
         else:
             LOGGER.debug("No next point found for idx %s, extrapolating instead of connecting", point_index)
             segment_length = self.map_data[point_index].segment_length
-            end_point = geoutils.offset(start_point, segment_length, direction)
+            end_point = offset(start_point, segment_length, direction)
 
-            corner_3 = geoutils.offset(end_point, width / 2, direction - pi / 2)
+            corner_3 = offset(end_point, width / 2, direction - pi / 2)
 
-            corner_4 = geoutils.offset(end_point, width / 2, direction + pi / 2)
+            corner_4 = offset(end_point, width / 2, direction + pi / 2)
 
         coords = [x for x in [corner_1, corner_2, corner_4, corner_3]]
 
@@ -533,10 +533,10 @@ class DrawMap():
 
         path_and_idxs = list(zip(input_coordinates, idxs))
 
-        top = geoutils.offset(self.car_position, self.minimap_distance, 0)
-        right = geoutils.offset(self.car_position, self.minimap_distance, pi / 2)
-        bottom = geoutils.offset(self.car_position, self.minimap_distance, pi)
-        left = geoutils.offset(self.car_position, self.minimap_distance, 1.5 * pi)
+        top = offset(self.car_position, self.minimap_distance, 0)
+        right = offset(self.car_position, self.minimap_distance, pi / 2)
+        bottom = offset(self.car_position, self.minimap_distance, pi)
+        left = offset(self.car_position, self.minimap_distance, 1.5 * pi)
 
         # seperate x and y
         x_points_scaled = scale_list(
@@ -582,7 +582,7 @@ class DrawMap():
 
         # Get outerbounds of the zoomed view
         bounds = [
-            geoutils.offset(self.car_position, self.minimap_distance, angle) for angle in [0, pi / 2, pi, 1.5 * pi]
+            offset(self.car_position, self.minimap_distance, angle) for angle in [0, pi / 2, pi, 1.5 * pi]
         ]
         LOGGER.debug("Bounds of the zoomed view are %s", bounds)
 

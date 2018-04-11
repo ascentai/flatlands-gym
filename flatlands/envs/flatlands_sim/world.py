@@ -11,7 +11,8 @@ import logging
 
 from scipy.spatial import cKDTree as KDTree
 
-from envs.flatlands_sim import geoutils
+from .geoutils import bearing, proj_to_local, get_distance_to_lines, relative_distance
+# from envs.flatlands_sim import geoutils
 
 LOGGER = logging.getLogger("world")
 
@@ -198,7 +199,7 @@ class WorldMap(object):
                 end = map_data[-1]
                 start = map_data[0]
 
-                theta = geoutils.bearing((end.lon, end.lat), (start.lon, start.lat))
+                theta = bearing((end.lon, end.lat), (start.lon, start.lat))
                 dist = math.sqrt(abs(end.lon - start.lon)**2 + abs(end.lat - start.lat)**2)
                 map_data[-1] = self.map_point(
                     lon=end.lon, lat=end.lat, width=end.width, direction=theta, segment_length=dist)
@@ -220,7 +221,7 @@ class WorldMap(object):
             # Converts our path data to EPSG 30176 x-y space
             # List of namedtuples with x_local, and y_local attributes
             LOGGER.debug("Generating projection of path")
-            self.projected_path = geoutils.proj_to_local(self.path_global)
+            self.projected_path = proj_to_local(self.path_global)
         else:
             local_coord = namedtuple("local_coord", "x_local, y_local")
             self.projected_path = [local_coord(i[1], i[0]) for i in self.path_global]
@@ -257,7 +258,7 @@ class WorldMap(object):
             point2 = self.kd_tree.data[0]
             point3 = self.kd_tree.data[1]
 
-        closest_pt = geoutils.get_distance_to_lines(input_location, point1, point2, point3)
+        closest_pt = get_distance_to_lines(input_location, point1, point2, point3)
 
         LOGGER.debug("The distance to the track is %s", closest_pt)
         return closest_pt
@@ -311,7 +312,7 @@ class WorldMap(object):
             point_set.append(self.path[i])
 
         # Get the distance to each of these points
-        distances = [geoutils.relative_distance(position, destination, angle) for destination in point_set]
+        distances = [relative_distance(position, destination, angle) for destination in point_set]
         LOGGER.debug("Full distances set: %s", distances)
 
         # If the first value is behind the origin then don't return it

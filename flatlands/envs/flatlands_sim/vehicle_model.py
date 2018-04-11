@@ -20,7 +20,7 @@ import numpy as np
 from math import pi
 import pygame
 
-from envs.flatlands_sim import geoutils
+from .geoutils import distance, offset
 
 LOGGER = logging.getLogger("vehicle")
 
@@ -280,7 +280,7 @@ class PointModel(IVehicleModel):
             v = np.clip(v, 0, self.max_velocity)
 
         # use geoutils to calculate new position
-        new_x, new_y = geoutils.offset(self._pose, v, theta)
+        new_x, new_y = offset(self._pose, v, theta)
 
         # set new pose
         self._set_pose(new_x, new_y, theta)
@@ -534,7 +534,7 @@ class BicycleModel(PointModel):
         if self.center_of_turn is None:
             # just move forward
             # use geoutils to do the straight line movement
-            x_prime, y_prime = geoutils.offset(self.position, v, theta)
+            x_prime, y_prime = offset(self.position, v, theta)
         else:
             xc, yc = self.center_of_turn
             x_prime = xc - self.turn_radius * math.cos(theta)
