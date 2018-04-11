@@ -3,7 +3,7 @@ Installs flatlands, a gym-compatible driving-on-track simulator
 """
 
 from os import path
-from setuptools import setup
+from setuptools import setup, find_packages
 
 # Get the long description from the README file
 HERE = path.abspath(path.dirname(__file__))
@@ -24,7 +24,7 @@ setup(
     author='AscentAI',
     url='https://github.com/ascentai/flatlands-gym',
     author_email='dev@ascent.ai',
-    version='0.1.3',
+    version='0.1.8',
     classifiers=[
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
@@ -32,6 +32,7 @@ setup(
     keywords='driving simulation gym',  # Optional,
     license='MIT',
     python_requires='>=3',
-    data_files=[('map', ['flatlands/envs/flatlands_sim/original_circuit_green.csv'])],
-    packages=['flatlands'],
+    data_files=[('flatlands', ['map_files/original_circuit_green.csv'])],
+    packages=find_packages(),
+    include_package_data=True,
 )
