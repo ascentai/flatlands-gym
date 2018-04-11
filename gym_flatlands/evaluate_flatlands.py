@@ -45,11 +45,10 @@ def evaluate(model_path):
         done = False
         ep_rew = 0
         while not done:
-            action = pposgd_flatlands.act(True, obs)
-            print("action:", action)
-            obs, rew, done, info = env.step(action)
-            ep_rew += rew
             env.render()
+            action = pposgd_flatlands.act(True, obs)
+            obs, rew, done, info = env.step(action[0])
+            ep_rew += rew
 
         print("Episode reward: %i" % ep_rew)
 
