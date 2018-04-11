@@ -2,7 +2,7 @@
 
 ## Ascent Robotics
 
-Flatlands is a simple gym compatible simulator for a car driving around a track.
+Flatlands is a simple gym compatible simulator for a car driving around a track. It is tested with Python3, and Windows/ Ubuntu.
 
 To use it, clone this repo to your computer with:
 ```
@@ -13,6 +13,7 @@ Then install the dependencies with:
 ```
 pip install -e .
 ```
+Flatlands uses `pygame` for visualization, so if this doesn't work, you may need to install the SDL library on your system as well.
 
 To create a gym environment you need to import `gym` and then import `flatlands` inside python
 ```python
