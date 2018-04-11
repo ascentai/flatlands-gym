@@ -16,6 +16,7 @@ setup(
         'gym',
         'scipy',
         'pyproj',
+        'pygame',
     ],
     description='Flatlands simple on-track driving simulator with physics',
     long_description=LONG_DESC,
