@@ -12,15 +12,14 @@ https://nabinsharma.wordpress.com/2014/01/02/kinematics-of-a-robot-bicycle-model
 """
 
 from abc import ABCMeta, abstractmethod
-import math
 import random
 import logging
+from math import pi, sin, cos, tan
 
 import numpy as np
-from math import pi
 import pygame
 
-from .geoutils import distance, offset
+from .geoutils import offset
 
 LOGGER = logging.getLogger("vehicle")
 
@@ -369,7 +368,7 @@ class BicycleModel(PointModel):
             theta=0.0,
             wheelbase=2.6,
             track=1.2,
-            max_wheel_angle=math.pi / 3,  # 60 degrees
+            max_wheel_angle=pi / 3,  # 60 degrees
             max_velocity=0.5,
             max_accel=0.1,
             vehicle_id="Bicycle model",
@@ -380,7 +379,7 @@ class BicycleModel(PointModel):
         # private members
         self._wheelbase = wheelbase
         self._track = track
-        self._max_wheel_angle = max_wheel_angle % math.pi
+        self._max_wheel_angle = max_wheel_angle % pi
         self._wheel_turn_angle = 0.0
         self._noise = noise
         self._previous_wheel_angle = 0.0
@@ -427,7 +426,7 @@ class BicycleModel(PointModel):
         if self.wheel_turn_angle is None or self.wheel_turn_angle == 0.0:
             return None
 
-        return self._wheelbase / math.tan(self.wheel_turn_angle)
+        return self._wheelbase / tan(self.wheel_turn_angle)
 
     @property
     def wheel_angle_change(self):
@@ -449,8 +448,8 @@ class BicycleModel(PointModel):
             return None
 
         x, y, theta = self.pose
-        x_center = x + self.turn_radius * math.cos(theta)
-        y_center = y - self.turn_radius * math.sin(theta)
+        x_center = x + self.turn_radius * cos(theta)
+        y_center = y - self.turn_radius * sin(theta)
 
         return (x_center, y_center)
 
@@ -461,7 +460,7 @@ class BicycleModel(PointModel):
 
         :returns: a velocity value (meters / step)
         """
-        return self.velocity * math.sin(self.orientation)
+        return self.velocity * sin(self.orientation)
 
     @property
     def cross_radial_speed(self):
@@ -470,7 +469,7 @@ class BicycleModel(PointModel):
 
         :returns: a velocity value (meters / step)
         """
-        return self.velocity * math.cos(self.orientation)
+        return self.velocity * cos(self.orientation)
 
     @property
     def sprite(self):
@@ -537,8 +536,8 @@ class BicycleModel(PointModel):
             x_prime, y_prime = offset(self.position, v, theta)
         else:
             xc, yc = self.center_of_turn
-            x_prime = xc - self.turn_radius * math.cos(theta)
-            y_prime = yc + self.turn_radius * math.sin(theta)
+            x_prime = xc - self.turn_radius * cos(theta)
+            y_prime = yc + self.turn_radius * sin(theta)
 
         # set new pose
         self._set_pose(x_prime, y_prime, theta)

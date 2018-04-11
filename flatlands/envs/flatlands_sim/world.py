@@ -12,7 +12,6 @@ import logging
 from scipy.spatial import cKDTree as KDTree
 
 from .geoutils import bearing, proj_to_local, get_distance_to_lines, relative_distance
-# from envs.flatlands_sim import geoutils
 
 LOGGER = logging.getLogger("world")
 
@@ -211,7 +210,7 @@ class WorldMap(object):
             LOGGER.error(EnvironmentError)
             raise
 
-    def post_load(self, project_to_local=True):
+    def post_load(self, project_to_local=False):
         """
         After loading data, call this function to initialize the rest of the
         map class for things such as the local coordinate system
@@ -220,6 +219,7 @@ class WorldMap(object):
         if project_to_local:
             # Converts our path data to EPSG 30176 x-y space
             # List of namedtuples with x_local, and y_local attributes
+            # Only required if we're getting GPS coordinates from Japan
             LOGGER.debug("Generating projection of path")
             self.projected_path = proj_to_local(self.path_global)
         else:

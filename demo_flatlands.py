@@ -7,7 +7,8 @@ import math
 import logging
 
 import gym
-import flatlands
+# Importing flatlands is enough to register it with gym
+import flatlands # pylint: disable=W0611
 
 LOGGER = logging.getLogger("flatlands_demo")
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)

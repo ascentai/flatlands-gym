@@ -22,8 +22,6 @@ class DrawMap():
 
     def __init__(self, world):
 
-        # custom_map = WorldMap("gym_flatlands/envs/flatlands_sim/original_circuit_green.csv")
-
         self.map_data = world.map_data
         self.projected_path = world.projected_path
 
@@ -41,16 +39,11 @@ class DrawMap():
         self.window_y = min(1024, max_height)
         self.window_x = None
 
-        # self.ascent_logo = pygame.image.load("map/ascent_logo.png")
-        # self.ascent_logo_reduced = pygame.transform.scale(self.ascent_logo, (25, 25))
-
         pygame.font.init()
         self.font = pygame.font.Font(None, 40)
 
         self.car_position = None
         self.car_direction = None
-
-        # self.debug = debug
 
         # Screen holds the pygame window to be written on by components
         self.screen = None
@@ -89,10 +82,6 @@ class DrawMap():
         self.track_draw_info = {}
         LOGGER.debug("track bounding box: (%s, %s) (%s, %s)", self.x_min, self.y_min, self.x_max, self.y_max)
 
-        # top_left = geom.Point(self.x_min, self.y_max)
-        # top_right = geom.Point(self.x_max, self.y_max)
-        # bottom_left = geom.Point(self.x_min, self.y_min)
-
         screen_height_in_m = distance((self.x_min, self.y_max), (self.x_min, self.y_min))
         screen_width_in_m = distance((self.x_min, self.y_max), (self.x_max, self.y_max))
 
@@ -102,7 +91,6 @@ class DrawMap():
         self.window_x = int(self.window_y * (screen_width_in_m / screen_height_in_m))
 
         # Spawn our pygame window
-        # pygame.display.set_icon(self.ascent_logo)
         self.screen = pygame.display.set_mode((self.window_x, self.window_y))
         pygame.display.set_caption("Flatlands Sim")
 
@@ -182,26 +170,6 @@ class DrawMap():
         for corner in self.track_draw_info["scaled_corners"]:
             gfxdraw.aapolygon(self.screen, corner, (204, 204, 204))
             gfxdraw.filled_polygon(self.screen, corner, (204, 204, 204))
-
-        last_point = self.track_draw_info["points_scaled"][0]
-
-        # for idx, point in enumerate(self.track_draw_info["points_scaled"][1:]):
-
-        #     # if self.debug:
-        #     #     # Draw each point as a dot
-        #     #     gfxdraw.circle(self.screen, *point.screen_x_y, 1, (0, 0, 0))
-        #     #     gfxdraw.filled_circle(self.screen, *point.screen_x_y, 1, (0, 0, 0))
-
-        #     #     # label each section on the track where a reset occurs (no segment lenth)
-        #     #     if last_point.segment_length == 0:
-        #     #         text = self.font.render("Section %s" % idx, True, (0, 128, 0)) #yapf:disable
-        #     #         self.screen.blit(text, last_point.screen_x_y)
-
-        #     # elif last_point.segment_length != 0:
-        #     #     # Draw the centerline
-        #     #     pygame.draw.aaline(self.screen, (238, 102, 102), last_point.screen_x_y, point.screen_x_y)
-
-        #     last_point = point
 
         self.draw_window_trimmings()
 

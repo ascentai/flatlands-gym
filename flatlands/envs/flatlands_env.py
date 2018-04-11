@@ -23,9 +23,9 @@ class FlatlandsEnv(gym.Env):
         """
         Load the track, draw module, etc.
         """
-        
-        # map_file = pkg_resources.resource_filename(__name__, 'data/original_circuit_green.csv')
-        map_file = resource_filename(Requirement.parse("flatlands"),"flatlands/envs/flatlands_sim/original_circuit_green.csv")
+
+        map_file = resource_filename(
+            Requirement.parse("flatlands"), "flatlands/envs/flatlands_sim/original_circuit_green.csv")
         self.world = WorldMap(map_file)
         self.draw_class = DrawMap(world=self.world)
         self.vehicle_model = BicycleModel(*self.world.path[0], self.world.direction[0], max_velocity=1)
