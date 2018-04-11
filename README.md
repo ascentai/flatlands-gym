@@ -14,8 +14,8 @@ Then install the dependencies with:
 pip install -e .
 ```
 
-To create a gym environment you need to import `gym` and then import `flatlands`
-```
+To create a gym environment you need to import `gym` and then import `flatlands` inside python
+```python
 import gym
 import flatlands
 
