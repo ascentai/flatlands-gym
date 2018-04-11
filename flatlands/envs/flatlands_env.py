@@ -4,12 +4,11 @@ Gym environment for a on-track driving simulator
 
 import logging
 import random
+from pkg_resources import Requirement, resource_filename
 
 import gym
-from gym import error, spaces, utils
-from gym.utils import seeding
 
-from envs.flatlands_sim import DrawMap, BicycleModel, WorldMap
+from .flatlands_sim import DrawMap, BicycleModel, WorldMap
 
 LOGGER = logging.getLogger("flatlands_env")
 
@@ -24,8 +23,11 @@ class FlatlandsEnv(gym.Env):
         """
         Load the track, draw module, etc.
         """
-        self.world = WorldMap("gym_flatlands/envs/flatlands_sim/original_circuit_green.csv")
-        self.draw_class = DrawMap(map_data=self.world.map_data)
+
+        map_file = resource_filename(
+            Requirement.parse("flatlands"), "flatlands/envs/flatlands_sim/original_circuit_green.csv")
+        self.world = WorldMap(map_file)
+        self.draw_class = DrawMap(world=self.world)
         self.vehicle_model = BicycleModel(*self.world.path[0], self.world.direction[0], max_velocity=1)
 
         self.car_info = None
