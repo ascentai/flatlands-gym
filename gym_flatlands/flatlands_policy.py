@@ -1,14 +1,17 @@
 """
-TODO
+Flatlands optimizer for PPO.
 """
 
-import baselines.common.tf_util as U
 import tensorflow as tf
+import baselines.common.tf_util as U
 import gym
 from baselines.common.distributions import make_pdtype
 
 
 class flatPolicy(object):
+    """
+    An optimizer policy for use with PPO in Flatlands.
+    """
     def __init__(self, name, ob_space, ac_space, kind="large"):
         self.recurrent = False
         with tf.variable_scope(name):
@@ -46,6 +49,15 @@ class flatPolicy(object):
         self._act = U.function([stochastic, ob], [ac, self.vpred])
 
     def act(self, stochastic, ob):
+        """
+        Generates an action to be executed in the environment.
+
+        Inputs: stochastic  whether to use stochastic approximation of the
+                                gradient descent algorithm
+                ob          an observation from the environment
+
+        Return: an optimal action and associated predicted values
+        """
         ac1, vpred1 = self._act(stochastic, [ob])
         return ac1[0], vpred1[0]
 

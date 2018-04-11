@@ -88,6 +88,15 @@ def learn(env, policy_fn, *,
         adam_epsilon=1e-5,
         schedule='constant' # annealing for stepsize parameters (epsilon and adam)
         ):
+    """
+    Virtually unchanged from OpenAI's implementation, with some added lines to
+    facilitate saving the trained model.
+
+    Inputs: (...)
+
+    Return: None; saves the trained model in the current directory with a
+        timestamp under `sessions`
+    """
     print("def. sess.",tf.get_default_session())
     # Setup losses and stuff
     # ----------------------------------------
@@ -247,7 +256,12 @@ def load(directory, env, policy_fn, *,
         schedule='constant' # annealing for stepsize parameters (epsilon and adam)
         ):
     """
-    TODO
+    Sets up the same variables as in `learn()` and loads the given model.
+
+    Inputs: directory   path to the desired model
+            (...)
+
+    Return: None; loads the given model and prepares it to generate actions
     """
     global pi
 
@@ -297,7 +311,14 @@ def load(directory, env, policy_fn, *,
 
 def act(stochastic, obs):
     """
-    TODO
+    Generates an action using the loaded model.
+
+    Inputs: stochastic  whether to use stochastic approximation of the
+                            gradient descent algorithm
+            obs         an observation from the environment
+
+    Return: an action from the policy function, including the associated
+        predicted values
     """
     global pi
 

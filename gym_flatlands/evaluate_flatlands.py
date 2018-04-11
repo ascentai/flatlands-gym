@@ -1,5 +1,5 @@
 """
-TODO
+Evaluate a trained PPO model in Flatlands.
 """
 
 import argparse
@@ -14,13 +14,27 @@ from flatlands_policy import flatPolicy
 
 def _policy_fn(name, ob_space, ac_space):
     """
-    TODO
+    Instantiates a `flatPolicy` as PPO's optimizer.
+
+    Inputs: name        desired identifier
+            ob_space    placeholder representing the dimensions of the
+                            environment's observation space
+            ac_space    placeholder representing the dimensions of the
+                            environment's action space
+
+    Return: an instance of `flatPolicy`
     """
     return flatPolicy(name=name, ob_space=ob_space, ac_space=ac_space)
 
 def evaluate(model_path):
     """
-    TODO
+    Sets up the given PPO model in the Flatlands environment.
+
+    Inputs: model_path  the path to the directory containing the desired model
+                            as a saved TensorFlow session
+
+    Return: None; the environment will be rendered until interrupted, printing
+        the reward for each episode
     """
     session = tfu.single_threaded_session()
     session.__enter__()
@@ -54,7 +68,7 @@ def evaluate(model_path):
 
 def main():
     """
-    TODO
+    Passes commandline arguments to `evaluate()`.
     """
     parser = argparse.ArgumentParser(description=("Evaluate PPOSGD in"
             + " Flatlands."))

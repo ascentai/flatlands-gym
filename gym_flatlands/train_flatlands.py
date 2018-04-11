@@ -1,5 +1,5 @@
 """
-TODO
+Train PPO in the Flatlands Gym environment.
 """
 
 import sys
@@ -8,26 +8,36 @@ import argparse
 
 from mpi4py import MPI
 import gym
-from baselines.common import set_global_seeds
 from baselines import bench
 from baselines import logger
-import pposgd_flatlands
 import baselines.common.tf_util as tfu
 
+import pposgd_flatlands
 from flatlands_policy import flatPolicy
 
 
 def _policy_fn(name, ob_space, ac_space):
     """
-    TODO
+    Instantiates a `flatPolicy` as PPO's optimizer.
+
+    Inputs: name        desired identifier
+            ob_space    placeholder representing the dimensions of the
+                            environment's observation space
+            ac_space    placeholder representing the dimensions of the
+                            environment's action space
+
+    Return: an instance of `flatPolicy`
     """
-    #return cnn_policy.CnnPolicy(name=name, ob_space=ob_space,
-    #        ac_space=ac_space)
     return flatPolicy(name=name, ob_space=ob_space, ac_space=ac_space)
 
-def train(timesteps, seed):
+def train(timesteps):
     """
-    TODO
+    Kicks off the training routine for PPO.
+
+    Inputs: timesteps   desired length of training
+
+    Return: None; the trained model will be saved according to
+        `pposgd_flatlands.learn()`
     """
     rank = MPI.COMM_WORLD.Get_rank()
     session = tfu.single_threaded_session()
@@ -37,16 +47,9 @@ def train(timesteps, seed):
     else:
         logger.configure(format_strs=[])
 
-    workerseed = seed + 10000 * MPI.COMM_WORLD.Get_rank()
-    set_global_seeds(workerseed)
-
     env = gym.make("flatlands-v0")
     env = bench.Monitor(env, logger.get_dir() and
             os.path.join(logger.get_dir(), str(rank)))
-    #env.seed(workerseed)
-
-    #env = wrap_deepmind(env)
-    #env.seed(workerseed)
 
     pposgd_flatlands.learn(env, _policy_fn,
             max_timesteps=int(timesteps * 1.1),
@@ -64,14 +67,13 @@ def train(timesteps, seed):
 
 def main():
     """
-    TODO
+    Passes commandline arguments to `train()`.
     """
     parser = argparse.ArgumentParser(description="Train PPOSGD in Flatlands.")
     parser.add_argument("--steps", type=int, default=int(10e6))
-    parser.add_argument("--seed", type=int, default=0)
 
     args = parser.parse_args()
-    train(args.steps, args.seed)
+    train(args.steps)
 
 if __name__ == "__main__":
     main()
