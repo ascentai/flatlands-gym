@@ -1,7 +1,7 @@
 """
 Module for handling world information and generating world related observations
 Usage as follows:
-    from map import Map
+    from map import WorldMap
 """
 
 import csv
