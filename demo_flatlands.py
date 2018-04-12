@@ -23,6 +23,7 @@ def sim_demo():
 
     theta = 0
     while True:
+        flatlands_env.reset()
         for _ in flatlands_env.world.map_data:
 
             action = [
@@ -39,8 +40,6 @@ def sim_demo():
 
             # x and y form a right triangle, the angle towards which we want to go is their atan
             theta = math.atan(point[0] / point[1])
-
-        flatlands_env.reset()
 
 
 if __name__ == "__main__":
