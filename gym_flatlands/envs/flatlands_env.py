@@ -1,5 +1,5 @@
 """
-Gym environment for a on-track driving simulator
+Gym environment for a on-track driving simulator.
 """
 
 import sys
@@ -19,7 +19,7 @@ LOGGER = logging.getLogger("flatlands_env")
 
 class FlatlandsEnv(gym.Env):
     """
-    Gym environment for on-track driving simulator
+    Gym environment for on-track driving simulator.
     """
     metadata = {'render.modes': ['human']}
 

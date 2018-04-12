@@ -28,9 +28,9 @@ class flatPolicy(object):
                 shape=[sequence_length]+list(ob_space.shape))
 
         self.model = tf.keras.Sequential([
-            tf.keras.layers.Dense(10, activation="relu",
+            tf.keras.layers.Dense(14, activation="relu",
                     input_shape=ob_space.shape),
-            tf.keras.layers.Dense(10, activation="relu"),
+            tf.keras.layers.Dense(7, activation="relu"),
             tf.keras.layers.Dense(ac_space.shape[0])
         ])
 
