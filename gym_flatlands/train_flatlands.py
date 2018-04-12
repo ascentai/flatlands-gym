@@ -12,6 +12,7 @@ from baselines import bench
 from baselines import logger
 import baselines.common.tf_util as tfu
 
+import flatlands
 import pposgd_flatlands
 from flatlands_policy import flatPolicy
 
@@ -47,7 +48,7 @@ def train(timesteps):
     else:
         logger.configure(format_strs=[])
 
-    env = gym.make("flatlands-v0")
+    env = gym.make("Flatlands-v0")
     env = bench.Monitor(env, logger.get_dir() and
             os.path.join(logger.get_dir(), str(rank)))
 

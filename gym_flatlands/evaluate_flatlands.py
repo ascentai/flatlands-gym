@@ -8,6 +8,7 @@ import gym
 import baselines.common.tf_util as tfu
 from baselines import logger
 
+import flatlands
 import pposgd_flatlands
 from flatlands_policy import flatPolicy
 
@@ -39,7 +40,7 @@ def evaluate(model_path):
     session = tfu.single_threaded_session()
     session.__enter__()
 
-    env = gym.make("flatlands-v0")
+    env = gym.make("Flatlands-v0")
     obs = env.reset()
 
     pposgd_flatlands.load(model_path, env, _policy_fn,
@@ -64,7 +65,7 @@ def evaluate(model_path):
             obs, rew, done, info = env.step(action[0])
             ep_rew += rew
 
-        print("Episode reward: %i" % ep_rew)
+        print("Episode reward: {}".format(ep_rew))
 
 def main():
     """

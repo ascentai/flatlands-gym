@@ -4,10 +4,11 @@ Run a car directly along the track using proportional control
 
 import sys
 import math
-import time
 import logging
 
-from envs import FlatlandsEnv
+import gym
+# Importing flatlands is enough to register it with gym
+import flatlands # pylint: disable=W0611
 
 LOGGER = logging.getLogger("flatlands_demo")
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -18,20 +19,20 @@ def sim_demo():
     Runs along the path contained in the mapfile.
     """
 
-    flatlands = FlatlandsEnv()
+    flatlands_env = gym.make('Flatlands-v0')
 
     theta = 0
     while True:
-        for _ in flatlands.world.map_data:
+        for _ in flatlands_env.world.map_data:
 
             action = [
                 0.5,    # acceleration
                 theta,  # wheel angle
             ]
 
-            obs, reward, done, we = flatlands.step(action)
+            obs, reward, done, we = flatlands_env.step(action)
 
-            flatlands.render()
+            flatlands_env.render()
 
             # x and y distance to the 3rd point ahead (in meters)
             point = (obs[4], obs[5])
@@ -39,10 +40,11 @@ def sim_demo():
             # x and y form a right triangle, the angle towards which we want to go is their atan
             theta = math.atan(point[0] / point[1])
 
-        flatlands.reset()
+        flatlands_env.reset()
 
 
 if __name__ == "__main__":
+    LOGGER.debug("Registering flatlands env with Gym")
 
     LOGGER.info("Starting flatlands demo")
     sim_demo()

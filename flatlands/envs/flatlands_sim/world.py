@@ -1,7 +1,7 @@
 """
 Module for handling world information and generating world related observations
 Usage as follows:
-    from map import Map
+    from map import WorldMap
 """
 
 import csv
@@ -9,22 +9,9 @@ from collections import namedtuple
 import math
 import logging
 
-import shapely.geometry as geom
 from scipy.spatial import cKDTree as KDTree
 
-from envs.flatlands_sim import geoutils
-
-MAP_POINT = namedtuple('map_point', [
-    'lat',
-    'lon',
-    'width',
-    'direction',
-    'segment_length',
-])
-
-LAT_LONG = namedtuple('lat_long', 'lat, long')
-CAR_POSITION_POINT = namedtuple("car_position_ref", ["lat_long", "direction"])
-LOCAL_COORD = namedtuple("local_coord", "x_local, y_local")
+from .geoutils import bearing, proj_to_local, get_distance_to_lines, relative_distance
 
 LOGGER = logging.getLogger("world")
 
@@ -58,10 +45,7 @@ class WorldMap(object):
         # Location of the input file used by load function
         self.map_file = track_file
 
-        self.lat_long = LAT_LONG
-
         # Store the current position of the car
-        self.car_position_ref = CAR_POSITION_POINT
         self.car_position = None
 
         self._model = None
@@ -69,6 +53,13 @@ class WorldMap(object):
         # Holds the scipy kd-tree created from all map-points in a x-y projection
         self.kd_tree = None
 
+        self.map_point = namedtuple('map_point', [
+            'lat',
+            'lon',
+            'width',
+            'direction',
+            'segment_length',
+        ])
         # Draw class (can't initialize until we have loaded our data)
         self.zoomed_percentage_of_window = zoomed_percentage_of_window
 
@@ -91,7 +82,7 @@ class WorldMap(object):
     @property
     def path_global(self):
         """
-        Returns all of the lat-long coords in the map file
+        Returns all of the x-y coords in the map file
         """
         return [(x.lat, x.lon) for x in self.map_data]
 
@@ -120,14 +111,14 @@ class WorldMap(object):
     @property
     def start(self):
         """
-        Returns only the first set of lat-long coords in the map file
+        Returns only the first set of x-y coords in the map file
         """
         return (self.projected_path[0].x_local, self.projected_path[0].y_local)
 
     @property
     def goal(self):
         """
-        Returns only the last set of lat-long coords for the map file
+        Returns only the last set of x-y coords for the map file
         """
         return (self.projected_path[-1].x_local, self.projected_path[-1].y_local)
 
@@ -146,30 +137,30 @@ class WorldMap(object):
         return [(x.direction) for x in self.map_data]
 
     @property
-    def lat_min(self):
+    def y_min(self):
         """
-        Find the minimum latitude of the track
+        Find the minimum y of the track
         """
         return min([x.y_local for x in self.projected_path])
 
     @property
-    def lat_max(self):
+    def y_max(self):
         """
-        Find the maximum latitude of the track
+        Find the maximum y of the track
         """
         return max([x.y_local for x in self.projected_path])
 
     @property
-    def long_min(self):
+    def x_min(self):
         """
-        Find the minimum longitude of the track
+        Find the minimum x of the track
         """
         return min([x.x_local for x in self.projected_path])
 
     @property
-    def long_max(self):
+    def x_max(self):
         """
-        Find the maximum longitude of the track
+        Find the maximum x of the track
         """
         return max([x.x_local for x in self.projected_path])
 
@@ -196,7 +187,7 @@ class WorldMap(object):
                     row_float = [float(i) for i in row]
 
                     map_data.append(
-                        MAP_POINT(
+                        self.map_point(
                             lon=row_float[0] / scale,
                             # flip the y-coordinate in preparation for the rotation in draw.py
                             lat=(height - row_float[1]) / scale,
@@ -207,9 +198,9 @@ class WorldMap(object):
                 end = map_data[-1]
                 start = map_data[0]
 
-                theta = geoutils.bearing((end.lon, end.lat), (start.lon, start.lat))
+                theta = bearing((end.lon, end.lat), (start.lon, start.lat))
                 dist = math.sqrt(abs(end.lon - start.lon)**2 + abs(end.lat - start.lat)**2)
-                map_data[-1] = MAP_POINT(
+                map_data[-1] = self.map_point(
                     lon=end.lon, lat=end.lat, width=end.width, direction=theta, segment_length=dist)
                 map_data.append(start)
                 LOGGER.debug("Found %d points of track data", len(map_data))
@@ -219,7 +210,7 @@ class WorldMap(object):
             LOGGER.error(EnvironmentError)
             raise
 
-    def post_load(self, project_to_local=True):
+    def post_load(self, project_to_local=False):
         """
         After loading data, call this function to initialize the rest of the
         map class for things such as the local coordinate system
@@ -228,8 +219,9 @@ class WorldMap(object):
         if project_to_local:
             # Converts our path data to EPSG 30176 x-y space
             # List of namedtuples with x_local, and y_local attributes
+            # Only required if we're getting GPS coordinates from Japan
             LOGGER.debug("Generating projection of path")
-            self.projected_path = geoutils.proj_to_local(self.path_global)
+            self.projected_path = proj_to_local(self.path_global)
         else:
             local_coord = namedtuple("local_coord", "x_local, y_local")
             self.projected_path = [local_coord(i[1], i[0]) for i in self.path_global]
@@ -246,7 +238,7 @@ class WorldMap(object):
         """
         Returns the distance from the track for a set of geographic coordinates
 
-        Accepts: input_location: 2-tuple containing latitute and longitude
+        Accepts: input_location: 2-tuple containing x and y
 
         Returns: the distance in meters from the track
         """
@@ -266,32 +258,17 @@ class WorldMap(object):
             point2 = self.kd_tree.data[0]
             point3 = self.kd_tree.data[1]
 
-        # Draw lines between them, and find the closest point on the lines to the input
-        line1 = geom.LineString([point1, point2])
-        line2 = geom.LineString([point2, point3])
+        closest_pt = get_distance_to_lines(input_location, point1, point2, point3)
 
-        # Convert the input point to our local projection system
-        point = geom.Point(input_location)
-
-        # Now find the closest point on each line to our input
-        point_on_line1 = line1.interpolate(line1.project(point))
-        point_on_line2 = line2.interpolate(line2.project(point))
-
-        # Now get the distances between those points and the input point
-        dist1 = point.distance(point_on_line1)
-        dist2 = point.distance(point_on_line2)
-
-        LOGGER.debug("The distance to the nearest two line segments on the track is %s, %s", dist1, dist2)
-
-        # We're only concerned about the smaller one, so we'll return it
-        return min(dist1, dist2)
+        LOGGER.debug("The distance to the track is %s", closest_pt)
+        return closest_pt
 
     def distance_to_goal(self, input_location):
         """
         Computes the distance around the track to the goal point
 
         Accepts:
-            input_location: a tuple containing lat-long coordinates formatted to epsg:30176
+            input_location: a tuple containing x-y coordinates formatted to epsg:30176
         Returns:
             A float containing the distance in meters to the goal point
         """
@@ -309,7 +286,7 @@ class WorldMap(object):
         the track nearest to the target.
 
         Accepts:
-            position: lat-long tuple containing the search point
+            position: x-y tuple containing the search point
             n: the number of points to return distance info for
         Returns:
             A list of (n) tuples containing the distance in meters (x and y)
@@ -335,7 +312,7 @@ class WorldMap(object):
             point_set.append(self.path[i])
 
         # Get the distance to each of these points
-        distances = [geoutils.relative_distance(position, destination, angle) for destination in point_set]
+        distances = [relative_distance(position, destination, angle) for destination in point_set]
         LOGGER.debug("Full distances set: %s", distances)
 
         # If the first value is behind the origin then don't return it
@@ -345,16 +322,16 @@ class WorldMap(object):
 
     def get_nearest_points(self, origin, one_point_only=False, return_index=False):
         """
-        Find the nearest two points on the track to an arbitrary lat-long pair,
+        Find the nearest two points on the track to an arbitrary x-y pair,
 
         Accepts:
-            origin: a lat-long tuple containing coordinates formatted to epsg:30176
+            origin: a x-y tuple containing coordinates formatted to epsg:30176
             one_point_only: A boolean to ask for only a single value instead of two
             return_index: A boolean for getting the nearest point in Map.map_data
             instead of its coords
 
         Returns:
-            Two 2-tuples (or 1 with one_point_only), containing the lat-long for the
+            Two 2-tuples (or 1 with one_point_only), containing the x-y for the
             nearest point(s) on the track
         """
 

@@ -2,7 +2,6 @@
 This module is used for visualizing the map and vehicle, using pygame
 """
 
-import sys
 from collections import namedtuple
 import math
 from math import pi
@@ -11,8 +10,7 @@ import logging
 import pygame
 from pygame import gfxdraw
 
-from envs.flatlands_sim.world import WorldMap
-from envs.flatlands_sim import geoutils
+from .geoutils import distance, offset
 
 LOGGER = logging.getLogger("draw")
 
@@ -22,20 +20,18 @@ class DrawMap():
     A class for visualizing system state with pygame.
     """
 
-    def __init__(self, map_data):
+    def __init__(self, world):
 
-        custom_map = WorldMap("gym_flatlands/envs/flatlands_sim/original_circuit_green.csv")
-
-        self.map_data = map_data
-        self.projected_path = custom_map.projected_path
+        self.map_data = world.map_data
+        self.projected_path = world.projected_path
 
         self.path = [(x[0], x[1]) for x in self.projected_path]
         self.segment_length = [(x.segment_length) for x in self.map_data]
 
-        self.lat_min = custom_map.lat_min
-        self.lat_max = custom_map.lat_max
-        self.long_min = custom_map.long_min
-        self.long_max = custom_map.long_max
+        self.y_min = world.y_min
+        self.y_max = world.y_max
+        self.x_min = world.x_min
+        self.x_max = world.x_max
 
         # The width isn't set, it's generated based on the aspect ratio of the map data
         pygame.init()
@@ -43,16 +39,11 @@ class DrawMap():
         self.window_y = min(1024, max_height)
         self.window_x = None
 
-        # self.ascent_logo = pygame.image.load("map/ascent_logo.png")
-        # self.ascent_logo_reduced = pygame.transform.scale(self.ascent_logo, (25, 25))
-
         pygame.font.init()
         self.font = pygame.font.Font(None, 40)
 
         self.car_position = None
         self.car_direction = None
-
-        # self.debug = debug
 
         # Screen holds the pygame window to be written on by components
         self.screen = None
@@ -63,14 +54,12 @@ class DrawMap():
             'segment_length',
         ])
 
-        self.lat_long = namedtuple('lat_long', 'lat, long')
-
         # Define our (soft) border we have inside the window
         self.border_width = 0.05
         self.border_size = self.window_y * self.border_width
 
         #For the zoomed view in the corner
-        self.zoomed_window_size = custom_map.zoomed_percentage_of_window * self.window_y
+        self.zoomed_window_size = world.zoomed_percentage_of_window * self.window_y
 
         # Hold the track information so we don't have to re-draw it every refresh
         self.track_draw_info = None
@@ -91,14 +80,10 @@ class DrawMap():
         """
 
         self.track_draw_info = {}
-        LOGGER.debug("track bounding box: (%s, %s) (%s, %s)", self.long_min, self.lat_min, self.long_max, self.lat_max)
+        LOGGER.debug("track bounding box: (%s, %s) (%s, %s)", self.x_min, self.y_min, self.x_max, self.y_max)
 
-        # top_left = geom.Point(self.long_min, self.lat_max)
-        # top_right = geom.Point(self.long_max, self.lat_max)
-        # bottom_left = geom.Point(self.long_min, self.lat_min)
-
-        screen_height_in_m = geoutils.distance((self.long_min, self.lat_max), (self.long_min, self.lat_min))
-        screen_width_in_m = geoutils.distance((self.long_min, self.lat_max), (self.long_max, self.lat_max))
+        screen_height_in_m = distance((self.x_min, self.y_max), (self.x_min, self.y_min))
+        screen_width_in_m = distance((self.x_min, self.y_max), (self.x_max, self.y_max))
 
         LOGGER.debug("screen height: %sm, width %sm", screen_height_in_m, screen_width_in_m)
 
@@ -106,7 +91,6 @@ class DrawMap():
         self.window_x = int(self.window_y * (screen_width_in_m / screen_height_in_m))
 
         # Spawn our pygame window
-        # pygame.display.set_icon(self.ascent_logo)
         self.screen = pygame.display.set_mode((self.window_x, self.window_y))
         pygame.display.set_caption("Flatlands Sim")
 
@@ -186,26 +170,6 @@ class DrawMap():
         for corner in self.track_draw_info["scaled_corners"]:
             gfxdraw.aapolygon(self.screen, corner, (204, 204, 204))
             gfxdraw.filled_polygon(self.screen, corner, (204, 204, 204))
-
-        last_point = self.track_draw_info["points_scaled"][0]
-
-        # for idx, point in enumerate(self.track_draw_info["points_scaled"][1:]):
-
-        #     # if self.debug:
-        #     #     # Draw each point as a dot
-        #     #     gfxdraw.circle(self.screen, *point.screen_x_y, 1, (0, 0, 0))
-        #     #     gfxdraw.filled_circle(self.screen, *point.screen_x_y, 1, (0, 0, 0))
-
-        #     #     # label each section on the track where a reset occurs (no segment lenth)
-        #     #     if last_point.segment_length == 0:
-        #     #         text = self.font.render("Section %s" % idx, True, (0, 128, 0)) #yapf:disable
-        #     #         self.screen.blit(text, last_point.screen_x_y)
-
-        #     # elif last_point.segment_length != 0:
-        #     #     # Draw the centerline
-        #     #     pygame.draw.aaline(self.screen, (238, 102, 102), last_point.screen_x_y, point.screen_x_y)
-
-        #     last_point = point
 
         self.draw_window_trimmings()
 
@@ -350,8 +314,8 @@ class DrawMap():
         """
         Draws the car at a set (new) position on the map
 
-        Accepts:    car_position: The GPS location of the car (self.lat_long namedtuple)
-                    car_direction: radians from north which it's pointing
+        Accepts:    kwargs: A dict containing values needed for drawing the car
+                        ex. car_position_x, car_directions, etc.
 
         Return: Nothing
         """
@@ -385,7 +349,7 @@ class DrawMap():
         self.draw(update_screen=False)
 
         # requisite proportions for proper scaling of the sprite
-        mPerPx = (self.lat_max - self.lat_min) / (self.window_y - self.border_size * 2)
+        mPerPx = (self.y_max - self.y_min) / (self.window_y - self.border_size * 2)
 
         pxPerM, car_sprite = self._car_sprite
 
@@ -462,9 +426,9 @@ class DrawMap():
         direction = self.map_data[point_index].direction
         width = self.map_data[point_index].width
 
-        corner_1 = geoutils.offset(start_point, width / 2, direction - pi / 2)
+        corner_1 = offset(start_point, width / 2, direction - pi / 2)
 
-        corner_2 = geoutils.offset(start_point, width / 2, direction + pi / 2)
+        corner_2 = offset(start_point, width / 2, direction + pi / 2)
 
         if only_start_corners:
             return [corner_1, corner_2]
@@ -481,11 +445,11 @@ class DrawMap():
         else:
             LOGGER.debug("No next point found for idx %s, extrapolating instead of connecting", point_index)
             segment_length = self.map_data[point_index].segment_length
-            end_point = geoutils.offset(start_point, segment_length, direction)
+            end_point = offset(start_point, segment_length, direction)
 
-            corner_3 = geoutils.offset(end_point, width / 2, direction - pi / 2)
+            corner_3 = offset(end_point, width / 2, direction - pi / 2)
 
-            corner_4 = geoutils.offset(end_point, width / 2, direction + pi / 2)
+            corner_4 = offset(end_point, width / 2, direction + pi / 2)
 
         coords = [x for x in [corner_1, corner_2, corner_4, corner_3]]
 
@@ -493,10 +457,10 @@ class DrawMap():
 
     def _scale_for_display(self, input_coordinates):
         """
-        Scales a set of lat-long coordinates to integer values (for location on the display)
+        Scales a set of x-y coordinates to integer values (for location on the display)
 
-        Accepts:
-            input_coordinates: a list of tuples, containing the lat-long values
+            input_coordinates:
+        Accepts: input_coordinates, a list of 2-tuples each containing x-y values
 
         Returns: a new list of the same size as the input list containing integer values for display
         """
@@ -504,15 +468,15 @@ class DrawMap():
         # seperate x and y
         x_points_scaled = scale_list(
             input_list=[x[0] for x in input_coordinates],
-            min_val=self.long_min,
-            max_val=self.long_max,
+            min_val=self.x_min,
+            max_val=self.x_max,
             new_range=(self.window_x - self.border_size * 2),
             offset=self.border_size)
 
         y_points_scaled = scale_list(
             input_list=[x[1] for x in input_coordinates],
-            min_val=self.lat_min,
-            max_val=self.lat_max,
+            min_val=self.y_min,
+            max_val=self.y_max,
             new_range=(self.window_y - self.border_size * 2),
             offset=self.border_size,
             adjust_amount=self.window_y)
@@ -535,10 +499,10 @@ class DrawMap():
 
         path_and_idxs = list(zip(input_coordinates, idxs))
 
-        top = geoutils.offset(self.car_position, self.minimap_distance, 0)
-        right = geoutils.offset(self.car_position, self.minimap_distance, pi / 2)
-        bottom = geoutils.offset(self.car_position, self.minimap_distance, pi)
-        left = geoutils.offset(self.car_position, self.minimap_distance, 1.5 * pi)
+        top = offset(self.car_position, self.minimap_distance, 0)
+        right = offset(self.car_position, self.minimap_distance, pi / 2)
+        bottom = offset(self.car_position, self.minimap_distance, pi)
+        left = offset(self.car_position, self.minimap_distance, 1.5 * pi)
 
         # seperate x and y
         x_points_scaled = scale_list(
@@ -579,12 +543,12 @@ class DrawMap():
             A pygame `screen` Object that can be drawn at any point on the screen
                 OR
             a None object, if the coordinates given are impossible to visualize
-                (lat-long OOB)
+                (x-y OOB)
         """
 
         # Get outerbounds of the zoomed view
         bounds = [
-            geoutils.offset(self.car_position, self.minimap_distance, angle) for angle in [0, pi / 2, pi, 1.5 * pi]
+            offset(self.car_position, self.minimap_distance, angle) for angle in [0, pi / 2, pi, 1.5 * pi]
         ]
         LOGGER.debug("Bounds of the zoomed view are %s", bounds)
 
