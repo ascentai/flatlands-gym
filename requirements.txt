@@ -1,4 +1,0 @@
-gym
-scipy
-pyproj
-pygame

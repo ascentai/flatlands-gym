@@ -13,6 +13,8 @@ with open(path.join(HERE, 'README.md'), encoding='utf-8') as f:
 setup(
     name='flatlands',
     install_requires=[
+        'numpy',
+        'baselines',
         'gym',
         'scipy',
         'pyproj',
